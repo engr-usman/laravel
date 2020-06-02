@@ -1,0 +1,32 @@
+#!/bin/bash
+sudo yum update -y
+sudo yum install httpd -y
+sudo yum localinstall https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm -y
+sudo yum install mysql-server -y
+sudo systemctl restart httpd
+sudo systemctl enable httpd
+sudo systemctl start mysqld
+sudo amazon-linux-extras list
+sudo amazon-linux-extras enable php7.2
+sudo yum install php-cli php-xml php-json php-mbstring php-process php-common php-fpm php-zip php-mysqlnd git -y
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/bin/composer
+chmod +x /usr/bin/composer
+cd /var/www
+git clone https://github.com/engr-usman/laravel.git
+cd /var/www/laravel
+dd if=/dev/zero of=/swapfile bs=1M count=1024
+sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
+mkswap /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo 'echo "/swapfile  none  swap  defaults  0  0" >> /etc/fstab' | sudo sh
+composer install
+sudo chown -R ec2-user:apache /var/www
+sudo chmod 2775 /var/www && find /var/www -type d -exec sudo chmod 2775 {} \;
+find /var/www -type f -exec sudo chmod 0664 {} \;
+cd /var/www/laravel
+cp .env.example .env
+php artisan key:generate
+cp -f httpd.conf /etc/httpd/conf/httpd.conf
