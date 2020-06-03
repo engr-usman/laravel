@@ -1,25 +1,45 @@
-#!/bin/bash
-sudo yum remove httpd* php*
+# remove any existing apache and php
+sudo yum remove httpd* php* -y
 sudo yum clean all
 sudo yum update -y
-sudo yum install httpd -y
-sudo yum install php72 --skip-broken
-sudo service httpd restart
-sudo chkconfig httpd on
-yum install -y php72-gd php72-xml php72-xmlrpc php72-mcrypt php-pear --skip-broken
-sudo yum install php72-cli php72-xml php72-json php72-mbstring php72-process php72-common php72-fpm php72-zip php72-mysqlnd git -y
+# install apache 2.4
+sudo yum install -y httpd24 httpd24-tools mod24_ssl
+# install php 7.3
+sudo yum install -y php73 php73-devel php73-mysql php73-pdo php73-mbstring
+sudo yum install -y php73-gd php73-xml php73-xmlrpc php73-mcrypt php-pear
+# remove default vhost
+sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.bk
+# add new vhost
+cat << EOF > /etc/httpd/conf.d/vhost.conf
+<VirtualHost *:80>
+    DocumentRoot /var/www/html/laravel/public/
+    DirectoryIndex index.php
+    <Directory /var/www/html/laravel/>
+        Options -Indexes +FollowSymLinks +MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+RewriteEngine On
+</VirtualHost>
+EOF
+# install git
 sudo yum install git -y
+# install composer
 curl -sS https://getcomposer.org/installer | php
 mv composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
-cd /var/www
+# install project
+cd /var/www/html
 git clone https://github.com/engr-usman/laravel.git
-cd /var/www/laravel
+cd /var/www/html/laravel
+# install laravel project with composer
 COMPOSER_MEMORY_LIMIT=-1 composer install
-sudo chown -R ec2-user:apache /var/www
-sudo chmod 2775 /var/www && find /var/www -type d -exec sudo chmod 2775 {} \;
-find /var/www -type f -exec sudo chmod 0664 {} \;
-cd /var/www/laravel
+sudo chown -R ec2-user:apache /var/www/html
+sudo chmod 2775 /var/www/html && find /var/www/html -type d -exec sudo chmod 2775 {} \;
+find /var/www/html -type f -exec sudo chmod 0664 {} \;
+cd /var/www/html/laravel
 cp .env.example .env
 php artisan key:generate
-sudo service httpd restart
+# restart apache and enable it on reboot
+service httpd restart
+sudo chkconfig httpd on

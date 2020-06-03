@@ -1,2 +1,3 @@
 #!/bin/bash
 sudo service httpd restart
+sudo chkconfig httpd on
