@@ -1,3 +1,4 @@
+# lbistech - Bash script for installation dependencies
 # remove any existing apache and php
 sudo yum remove httpd* php* -y
 sudo yum clean all
