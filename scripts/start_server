@@ -1,4 +1,2 @@
 #!/bin/bash
-sudo systemctl restart httpd
-sudo systemctl start php-fpm
-sudo systemctl enable php-fpm
+sudo service httpd restart
